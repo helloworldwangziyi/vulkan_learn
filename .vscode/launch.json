@@ -11,7 +11,7 @@
       "request": "launch",
       // 换成你要调试的那一课（与 lessons/ 下文件名一致）
       // 注意：校验层只在 Debug 构建中启用，所以调试目标指向 build-debug/
-      "program": "${workspaceFolder}/build-debug/03_physical_device.exe",
+      "program": "${workspaceFolder}/build-debug/05_window_surface.exe",
       "args": [],
       "stopAtEntry": false,
       "cwd": "${workspaceFolder}",
