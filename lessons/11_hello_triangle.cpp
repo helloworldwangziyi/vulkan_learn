@@ -134,8 +134,10 @@ private:
     std::vector<VkCommandBuffer> commandBuffers;
 
     // 第十一课：同步对象（每帧一份）+ 帧轮转下标
-    std::vector<VkSemaphore> imageAvailableSemaphores;   // 图像到手通知
-    std::vector<VkSemaphore> renderFinishedSemaphores;   // 渲染完成通知
+    std::vector<VkSemaphore> imageAvailableSemaphores;   // 图像到手通知（每帧一个）
+    // 渲染完成通知：按"交换链图像"索引而非帧索引——
+    // 呈现引擎可能还拿着信号量，只有重新采集到同一张图才允许再 signal
+    std::vector<VkSemaphore> renderFinishedSemaphores;
     std::vector<VkFence> inFlightFences;                 // 该帧是否已提交（CPU 侧等待）
     std::vector<VkFence> imagesInFlight;                 // 每张交换链图像当前被哪帧占用
     uint32_t currentFrame = 0;
@@ -211,7 +213,7 @@ private:
     // -----------------------------------------------------------------
     void createSyncObjects() {
         imageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
-        renderFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
+        renderFinishedSemaphores.resize(swapChainImages.size());   // 按图像索引
         inFlightFences.resize(MAX_FRAMES_IN_FLIGHT);
         imagesInFlight.resize(swapChainImages.size(), VK_NULL_HANDLE);
 
@@ -223,11 +225,32 @@ private:
 
         for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
             if (vkCreateSemaphore(device, &semaphoreInfo, nullptr, &imageAvailableSemaphores[i]) != VK_SUCCESS ||
-                vkCreateSemaphore(device, &semaphoreInfo, nullptr, &renderFinishedSemaphores[i]) != VK_SUCCESS ||
                 vkCreateFence(device, &fenceInfo, nullptr, &inFlightFences[i]) != VK_SUCCESS) {
                 throw std::runtime_error("创建同步对象失败");
             }
         }
+        for (size_t i = 0; i < renderFinishedSemaphores.size(); i++) {
+            if (vkCreateSemaphore(device, &semaphoreInfo, nullptr, &renderFinishedSemaphores[i]) != VK_SUCCESS) {
+                throw std::runtime_error("创建同步对象失败");
+            }
+        }
+    }
+
+    // 交换链重建后图像数量可能变化，renderFinished 信号量跟着重建
+    void recreateRenderFinishedSemaphores() {
+        for (auto sem : renderFinishedSemaphores) {
+            vkDestroySemaphore(device, sem, nullptr);
+        }
+        renderFinishedSemaphores.resize(swapChainImages.size());
+
+        VkSemaphoreCreateInfo semaphoreInfo{};
+        semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+        for (size_t i = 0; i < renderFinishedSemaphores.size(); i++) {
+            if (vkCreateSemaphore(device, &semaphoreInfo, nullptr, &renderFinishedSemaphores[i]) != VK_SUCCESS) {
+                throw std::runtime_error("重建 renderFinished 信号量失败");
+            }
+        }
+        imagesInFlight.assign(swapChainImages.size(), VK_NULL_HANDLE);
     }
 
     // -----------------------------------------------------------------
@@ -249,6 +272,7 @@ private:
         createSwapChain();
         createImageViews();
         createFramebuffers();
+        recreateRenderFinishedSemaphores();   // 图像数量可能变了
     }
 
     void cleanupSwapChain() {
@@ -894,62 +918,86 @@ private:
     }
 
     // =========================================================================
-    // ★★★ 练习：实现 drawFrame()，让三角形出现在窗口里 ★★★
-    //
-    // 背景：前面十课已经把全部"零件"造好——交换链、帧缓冲、管线、
-    // 命令缓冲（recordCommandBuffer 可直接复用）、同步对象。
-    // 本函数的任务是每帧把零件组装起来走一遍流水线：
-    //
-    //   [CPU]                [GPU]                [显示]
-    //     │  1.等栅栏           │                    │
-    //     │  2.采集图像 ──────→ │  3.录制命令(画!)    │
-    //     │  4.提交命令 ──────→ │  (执行) ──信号量──→ │  5.呈现
-    //
-    // 五个步骤（全部用已存在的成员变量）：
-    //
-    // 1) 等当前帧的栅栏（CPU 不得超前 GPU 超过 MAX_FRAMES_IN_FLIGHT 帧）：
-    //      vkWaitForFences(device, 1, &inFlightFences[currentFrame],
-    //                     VK_TRUE, UINT64_MAX);
-    //
-    // 2) 采集交换链图像（动态加载，PFN_vkAcquireNextImageKHR，
-    //    用 vkGetInstanceProcAddr 查，查不到 = 没启用 swapchain 扩展）：
-    //      uint32_t imageIndex;
-    //      VkResult result = acquire(device, swapChain, UINT64_MAX,
-    //          imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &imageIndex);
-    //    返回 VK_ERROR_OUT_OF_DATE_KHR → framebufferResized = true; return;
-    //    其他非 SUCCESS 且非 SUBOPTIMAL → 抛异常
-    //
-    // 3) 重建本帧的命令缓冲：
-    //    - 若 imagesInFlight[imageIndex] 不是 VK_NULL_HANDLE，
-    //      先等它（这张图还被上一帧占用着）
-    //    - imagesInFlight[imageIndex] = inFlightFences[currentFrame]
-    //    - vkResetFences(...inFlightFences[currentFrame]...)   ← 提交前要重置
-    //    - vkResetCommandBuffer(commandBuffers[currentFrame], 0)
-    //    - recordCommandBuffer(commandBuffers[currentFrame], imageIndex)
-    //
-    // 4) 提交给图形队列（VkSubmitInfo）：
-    //      waitSemaphore   = imageAvailableSemaphores[currentFrame]
-    //      waitDstStageMask= VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT
-    //                        （等到图像真正可用再写颜色）
-    //      pCommandBuffers = &commandBuffers[currentFrame]（1 条）
-    //      signalSemaphore = renderFinishedSemaphores[currentFrame]
-    //      fence           = inFlightFences[currentFrame]
-    //      vkQueueSubmit(graphicsQueue, 1, &submitInfo, inFlightFences[currentFrame])
-    //
-    // 5) 呈现（动态加载，PFN_vkQueuePresentKHR，VkPresentInfoKHR）：
-    //      waitSemaphore = renderFinishedSemaphores[currentFrame]
-    //      swapchain + pImageIndices = &imageIndex
-    //    返回 OUT_OF_DATE，或 SUBOPTIMAL，或 framebufferResized →
-    //      framebufferResized = false; recreateSwapChain();
-    //    其他错误 → 抛异常
-    //
-    // 最后：currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
-    //
-    // 提示：参考第 2/6 课的"壳函数"模式处理两个动态加载函数；
-    // 遇到校验层报错先读第一句和 VUID，再对照上面的步骤查漏。
-    // =========================================================================
+    // -----------------------------------------------------------------
+    // drawFrame：每帧一遍 [等栅栏 → 采集 → 录制 → 提交 → 呈现] 流水线。
+    // 同步关系：栅栏管 CPU 不超前排；信号量管 GPU 内部接力
+    //   acquire --imageAvailable--> submit --renderFinished--> present
+    // -----------------------------------------------------------------
     void drawFrame() {
-        throw std::runtime_error("练习:请按 drawFrame 上方注释实现绘制流水线");
+        // 1. 等当前帧的栅栏：CPU 最多超前 MAX_FRAMES_IN_FLIGHT 帧
+        vkWaitForFences(device, 1, &inFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
+
+        // 2. 采集交换链图像（设备扩展函数，动态加载）
+        auto acquireNextImage = (PFN_vkAcquireNextImageKHR)vkGetInstanceProcAddr(instance, "vkAcquireNextImageKHR");
+        if (acquireNextImage == nullptr) {
+            throw std::runtime_error("vkAcquireNextImageKHR 不可用（swapchain 扩展没启用？）");
+        }
+        uint32_t imageIndex;
+        VkResult result = acquireNextImage(device, swapChain, UINT64_MAX,
+            imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &imageIndex);
+
+        if (result == VK_ERROR_OUT_OF_DATE_KHR) {   // 交换链已过期，重建后下帧再来
+            recreateSwapChain();
+            return;
+        } else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
+            throw std::runtime_error("采集交换链图像失败");
+        }
+
+        // 3. 这张图若还被更早的帧占用，先等那帧交还（imagesInFlight 追踪）
+        if (imagesInFlight[imageIndex] != VK_NULL_HANDLE) {
+            vkWaitForFences(device, 1, &imagesInFlight[imageIndex], VK_TRUE, UINT64_MAX);
+        }
+        imagesInFlight[imageIndex] = inFlightFences[currentFrame];
+
+        // 4. 重建并录制本帧命令（录制前重置；栅栏也将随提交重新"挂起"）
+        vkResetFences(device, 1, &inFlightFences[currentFrame]);
+        vkResetCommandBuffer(commandBuffers[currentFrame], 0);
+        recordCommandBuffer(commandBuffers[currentFrame], imageIndex);
+
+        VkSubmitInfo submitInfo{};
+        submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+        VkSemaphore waitSemaphores[] = { imageAvailableSemaphores[currentFrame] };
+        // 等到"写颜色附件"这一步才需要图像就绪——前面的顶点阶段可以先跑
+        VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
+        submitInfo.waitSemaphoreCount = 1;
+        submitInfo.pWaitSemaphores = waitSemaphores;
+        submitInfo.pWaitDstStageMask = waitStages;
+        submitInfo.commandBufferCount = 1;
+        submitInfo.pCommandBuffers = &commandBuffers[currentFrame];
+        VkSemaphore signalSemaphores[] = { renderFinishedSemaphores[imageIndex] };
+        submitInfo.signalSemaphoreCount = 1;
+        submitInfo.pSignalSemaphores = signalSemaphores;
+
+        if (vkQueueSubmit(graphicsQueue, 1, &submitInfo, inFlightFences[currentFrame]) != VK_SUCCESS) {
+            throw std::runtime_error("提交渲染命令失败");
+        }
+
+        // 5. 呈现（同为设备扩展函数，动态加载）
+        auto queuePresent = (PFN_vkQueuePresentKHR)vkGetInstanceProcAddr(instance, "vkQueuePresentKHR");
+        if (queuePresent == nullptr) {
+            throw std::runtime_error("vkQueuePresentKHR 不可用");
+        }
+        VkPresentInfoKHR presentInfo{};
+        presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+        presentInfo.waitSemaphoreCount = 1;
+        presentInfo.pWaitSemaphores = signalSemaphores;      // 等渲染完成才上屏
+        VkSwapchainKHR swapChains[] = { swapChain };
+        presentInfo.swapchainCount = 1;
+        presentInfo.pSwapchains = swapChains;
+        presentInfo.pImageIndices = &imageIndex;
+
+        result = queuePresent(presentQueue, &presentInfo);
+
+        // 交换链过期/次优，或期间窗口变过尺寸 → 重建
+        if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || framebufferResized) {
+            framebufferResized = false;
+            recreateSwapChain();
+        } else if (result != VK_SUCCESS) {
+            throw std::runtime_error("呈现失败");
+        }
+
+        // 帧轮转
+        currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
     }
 
     void mainLoop() {
@@ -970,8 +1018,10 @@ private:
         vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
         vkDestroyRenderPass(device, renderPass, nullptr);
 
-        for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) { // 同步对象
+        for (size_t i = 0; i < renderFinishedSemaphores.size(); i++) {
             vkDestroySemaphore(device, renderFinishedSemaphores[i], nullptr);
+        }
+        for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
             vkDestroySemaphore(device, imageAvailableSemaphores[i], nullptr);
             vkDestroyFence(device, inFlightFences[i], nullptr);
         }
