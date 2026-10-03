@@ -1,0 +1,42 @@
+{
+  "version": 3,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 16,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "default",
+      "displayName": "MinGW 13.1 (Qt) + Ninja",
+      "description": "本机已验证：Qt 自带的 MinGW g++ 13.1.0。原先 MSYS2 UCRT64 的 g++ 15.1.0 被火绒拦截（cc1plus 静默退出），暂不可用；如已在火绒中加白名单，可换回 ucrt64。ninja 用的还是 ucrt64 里那个（它只是构建驱动，不受影响）。",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_CXX_COMPILER": "C:/Users/Administrator/Files/qt/Tools/mingw1310_64/bin/g++.exe",
+        "CMAKE_MAKE_PROGRAM": "C:/Users/Administrator/Files/msys/ucrt64/bin/ninja.exe"
+      }
+    },
+    {
+      "name": "debug",
+      "inherits": "default",
+      "displayName": "MinGW UCRT64 + Ninja (Debug)",
+      "description": "带调试信息、-O0，可以直接在 VS Code 里按 F5 下断点。",
+      "binaryDir": "${sourceDir}/build-debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "default",
+      "configurePreset": "default"
+    },
+    {
+      "name": "debug",
+      "configurePreset": "debug"
+    }
+  ]
+}

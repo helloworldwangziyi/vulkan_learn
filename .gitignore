@@ -1,0 +1,16 @@
+# 构建产物
+build/
+build-debug/
+
+# 编译输出（playground 实验里的 dll/exe）
+*.o
+*.obj
+*.exe
+*.dll
+*.a
+
+# 着色器编译产物（后续课程会用到）
+*.spv
+
+# 教程 PDF 体积大且有版权，不进仓库（本地保留）
+Vulkan_Tutorial_CN.pdf

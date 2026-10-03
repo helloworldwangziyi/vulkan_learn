@@ -1,0 +1,31 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      // 用 gdb 调试当前课程。前提：用 debug preset 构建过（带 -g）：
+      //   cmake --preset debug
+      //   cmake --build --preset debug
+      // 然后按 F5。
+      "name": "调试当前课程 (GDB)",
+      "type": "cppdbg",
+      "request": "launch",
+      // 换成你要调试的那一课（与 lessons/ 下文件名一致）
+      // 注意：校验层只在 Debug 构建中启用，所以调试目标指向 build-debug/
+      "program": "${workspaceFolder}/build-debug/03_physical_device.exe",
+      "args": [],
+      "stopAtEntry": false,
+      "cwd": "${workspaceFolder}",
+      "environment": [],
+      "externalConsole": false,
+      "MIMode": "gdb",
+      "miDebuggerPath": "C:/Users/Administrator/Files/qt/Tools/mingw1310_64/bin/gdb.exe",
+      "setupCommands": [
+        {
+          "description": "为 gdb 启用整齐打印",
+          "text": "-enable-pretty-printing",
+          "ignoreFailures": true
+        }
+      ]
+    }
+  ]
+}
