@@ -10,10 +10,13 @@
 //     （GLFW 的 native 访问头，顶部已包含）
 //   * 实例扩展 VK_KHR_win32_surface 已经由 getRequiredExtensions() 启用
 //     （GLFW 要求的实例扩展里本来就带它）——所以加载器认得那个函数
-//   * vulkan.h 在 _WIN32 下自动包含 vulkan_win32.h，
-//     VkWin32SurfaceCreateInfoKHR / PFN_vkCreateWin32SurfaceKHR 直接可用
+//   * vulkan.h 按 VK_USE_PLATFORM_*_KHR 宏开关平台头：
+//     定义 VK_USE_PLATFORM_WIN32_KHR 后，vulkan_win32.h 里的
+//     VkWin32SurfaceCreateInfoKHR / PFN_vkCreateWin32SurfaceKHR 才可见
 //   * hinstance 用 GetModuleHandle(nullptr) 拿当前 exe 的模块句柄
 // ===========================================================================
+// 平台头开关必须在包含 vulkan.h 之前定义（GLFW 的 glfw3.h 会代包含它）
+#define VK_USE_PLATFORM_WIN32_KHR
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
@@ -28,6 +31,7 @@
 #include <stdexcept>
 #include <cstdlib>
 #include <vector>
+#include <windows.h> // GetModuleHandle
 
 const uint32_t WIDTH = 800;
 const uint32_t HEIGHT = 600;
@@ -133,7 +137,25 @@ private:
     // 参考：GLFW 源码 _glfwCreateWindowSurfaceWin32（你读过的那份）
     // -----------------------------------------------------------------
     void createSurface() {
-        throw std::runtime_error("练习:请实现 createSurface()（调 vkCreateWin32SurfaceKHR）");
+        HWND hwnd = glfwGetWin32Window(window);
+        if (hwnd == nullptr) {
+            throw std::runtime_error("从 GLFW 窗口取 HWND 失败");
+        }
+
+        PFN_vkCreateWin32SurfaceKHR fn = (PFN_vkCreateWin32SurfaceKHR)vkGetInstanceProcAddr(instance, "vkCreateWin32SurfaceKHR");
+        if (fn == nullptr) {
+            throw std::runtime_error("vkCreateWin32SurfaceKHR not found. Make sure VK_KHR_win32_surface extension is enabled.");
+        }
+
+        VkWin32SurfaceCreateInfoKHR sci{};
+        sci.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
+        sci.hwnd = hwnd;
+        sci.hinstance = GetModuleHandle(nullptr);
+
+        if (fn(instance, &sci, nullptr, &surface) != VK_SUCCESS) {
+            throw std::runtime_error("Failed to create Win32 surface");
+        }
+        std::cout << "窗口表面已创建（亲手调 vkCreateWin32SurfaceKHR）" << std::endl;
     }
 
     void createLogicalDevice() {

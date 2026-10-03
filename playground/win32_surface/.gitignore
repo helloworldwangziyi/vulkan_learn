@@ -1,2 +1,4 @@
 win32_surface.exe
 vulkan-1.dll
+out.txt
+err.txt
