@@ -20,6 +20,10 @@ Vulkan学习/
   build.cmd            编译+运行一课（就是 g++ 一行命令）
   lessons/             每课一个 .cpp，内容与教程一致
     └ 01_instance.cpp
+  playground/          动手实验区（脱离教程，自己复刻学过的机制）
+    ├ loader_demo/       迷你加载器：GetProcAddress 动态加载插件 DLL
+    └ win32_surface/     不用 glfwCreateWindowSurface，亲手调 vkCreateWin32SurfaceKHR
+                         （createSurface() 留作练习，build.cmd 一键编译运行）
   tools/glfw/          GLFW 3.4，用 MinGW 自己编译的
     ├ include/GLFW/     官方头文件
     ├ lib/libglfw3.a    静态库

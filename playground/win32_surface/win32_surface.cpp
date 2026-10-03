@@ -1,19 +1,25 @@
 // ===========================================================================
-// 第五课：窗口表面（Window Surface）
+// 实验：不用 glfwCreateWindowSurface，亲手调 vkCreateWin32SurfaceKHR
 //
-// 新增内容：
-//   createSurface()       —— 用 GLFW 创建 VkSurfaceKHR，把渲染目标接到窗口
-//   findQueueFamilies()   —— 升级：除了图形族，还要找"能向表面呈现"的族
+// 背景：读过 GLFW 源码后知道，glfwCreateWindowSurface 只是薄封装——
+//   真正的活是 vkGetInstanceProcAddr 摸出 vkCreateWin32SurfaceKHR，
+//   填 hwnd + hinstance，调用。这个实验就是把那层封装剥掉自己写。
 //
-// 知识点：
-//   * VkSurfaceKHR 是平台无关的"渲染目的地"抽象；
-//     创建它和平台强相关，所以交给 GLFW（glfwCreateWindowSurface）代办
-//   * 呈现能力 = 队列族 × 表面的配对属性：
-//     vkGetPhysicalDeviceSurfaceSupportKHR(设备, 族, 表面) 逐个族查询
-//   * QueueFamilyIndices 双 optional 形态正式登场
+// 练习目标：补全下面的 createSurface()。提示：
+//   * HWND 从 GLFW 窗口里拿：glfwGetWin32Window(window)
+//     （GLFW 的 native 访问头，顶部已包含）
+//   * 实例扩展 VK_KHR_win32_surface 已经由 getRequiredExtensions() 启用
+//     （GLFW 要求的实例扩展里本来就带它）——所以加载器认得那个函数
+//   * vulkan.h 在 _WIN32 下自动包含 vulkan_win32.h，
+//     VkWin32SurfaceCreateInfoKHR / PFN_vkCreateWin32SurfaceKHR 直接可用
+//   * hinstance 用 GetModuleHandle(nullptr) 拿当前 exe 的模块句柄
 // ===========================================================================
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
+
+// GLFW 的"后门"：暴露平台原生句柄的访问函数（glfwGetWin32Window 等）
+#define GLFW_EXPOSE_NATIVE_WIN32
+#include <GLFW/glfw3native.h>
 
 #include <cstring>
 #include <iostream>
@@ -114,14 +120,20 @@ private:
     }
 
     // -----------------------------------------------------------------
-    // 创建窗口表面。平台相关性全在 GLFW 内部，我们只需检查成败
-    // （Win32 下它最终会调到 vkCreateWin32SurfaceKHR）
+    // 练习：亲手调 vkCreateWin32SurfaceKHR 创建表面（不用 GLFW 封装）
+    //
+    // 四步走：
+    //   1) HWND hwnd = glfwGetWin32Window(window);
+    //   2) 动态加载：PFN_vkCreateWin32SurfaceKHR fn =
+    //        (PFN_vkCreateWin32SurfaceKHR)vkGetInstanceProcAddr(instance, "vkCreateWin32SurfaceKHR");
+    //      判空——摸不到说明扩展没启用，throw
+    //   3) 填 VkWin32SurfaceCreateInfoKHR：sType / hwnd / hinstance(GetModuleHandle(nullptr))
+    //   4) 调 fn(instance, &sci, nullptr, &surface)，检查 VK_SUCCESS
+    //
+    // 参考：GLFW 源码 _glfwCreateWindowSurfaceWin32（你读过的那份）
     // -----------------------------------------------------------------
     void createSurface() {
-        if (glfwCreateWindowSurface(instance, window, nullptr, &surface) != VK_SUCCESS) {
-            throw std::runtime_error("创建窗口表面失败");
-        }
-        std::cout << "窗口表面已创建" << std::endl;
+        throw std::runtime_error("练习:请实现 createSurface()（调 vkCreateWin32SurfaceKHR）");
     }
 
     void createLogicalDevice() {
