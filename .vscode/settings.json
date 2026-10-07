@@ -9,6 +9,10 @@
     "${workspaceFolder}/tools/glfw/include",
     "C:/VulkanSDK/1.4.350.0/Include"
   ],
+  // 语言功能（补全/跳转/诊断）全部交给 clangd，cpptools 只留作调试器
+  // （launch.json 的 cppdbg 依赖它）。cpptools 检测到 clangd 时会
+  // 弹窗问要不要关 IntelliSense，选"是"就是写的这个效果。
+  "C_Cpp.intelliSenseEngine": "disabled",
 
   // ---- CMake Tools ----
   // cmake 不在系统 PATH 上，显式指到安装目录
@@ -19,9 +23,17 @@
   "cmake.configureOnEdit": true,
   // 产物放 build/，和命令行 build.cmd 一致
   "cmake.buildDirectory": "${workspaceFolder}/build",
+  // CMake Tools 状态栏"运行/调试"按钮的工作目录：课程按相对路径
+  // shaders/xx.spv、textures/ 读文件，必须站在项目根上
+  "cmake.debugConfig": {
+    "cwd": "${workspaceFolder}"
+  },
 
   "files.associations": {
     "*.cpp": "cpp",
     "*.h": "cpp"
-  }
+  },
+
+  // 编辑器自动换行：长行按窗口宽度折行显示，不再横向滚动
+  "editor.wordWrap": "on"
 }

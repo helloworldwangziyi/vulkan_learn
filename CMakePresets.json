@@ -8,21 +8,77 @@
   "configurePresets": [
     {
       "name": "default",
-      "displayName": "MinGW 13.1 (Qt) + Ninja",
+      "displayName": "MinGW 13.1 (Qt) + Ninja [Windows]",
       "description": "本机已验证：Qt 自带的 MinGW g++ 13.1.0。原先 MSYS2 UCRT64 的 g++ 15.1.0 被火绒拦截（cc1plus 静默退出），暂不可用；如已在火绒中加白名单，可换回 ucrt64。ninja 用的还是 ucrt64 里那个（它只是构建驱动，不受影响）。",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      },
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
         "CMAKE_CXX_COMPILER": "C:/Users/Administrator/Files/qt/Tools/mingw1310_64/bin/g++.exe",
-        "CMAKE_MAKE_PROGRAM": "C:/Users/Administrator/Files/msys/ucrt64/bin/ninja.exe"
+        "CMAKE_MAKE_PROGRAM": "C:/Users/Administrator/Files/msys/ucrt64/bin/ninja.exe",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
       }
     },
     {
       "name": "debug",
       "inherits": "default",
-      "displayName": "MinGW UCRT64 + Ninja (Debug)",
+      "displayName": "MinGW + Ninja (Debug) [Windows]",
       "description": "带调试信息、-O0，可以直接在 VS Code 里按 F5 下断点。",
+      "binaryDir": "${sourceDir}/build-debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+    {
+      "name": "linux",
+      "displayName": "Linux + Ninja",
+      "description": "用系统默认编译器。前提：装了 vulkan-headers + libvulkan（或 LunarG SDK）、X11 开发包（如 Debian/Ubuntu: libx11-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev）和 ninja。",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      },
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+      }
+    },
+    {
+      "name": "linux-debug",
+      "inherits": "linux",
+      "displayName": "Linux + Ninja (Debug)",
+      "binaryDir": "${sourceDir}/build-debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+    {
+      "name": "macos",
+      "displayName": "macOS + Ninja",
+      "description": "用系统 Clang。前提：装 LunarG Vulkan SDK（含 MoltenVK，export VULKAN_SDK=/path/to/vulkan-sdk/macOS）和 ninja；首次运行如找不到设备，按 README 设置 VK_DRIVER_FILES。",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Darwin"
+      },
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+      }
+    },
+    {
+      "name": "macos-debug",
+      "inherits": "macos",
+      "displayName": "macOS + Ninja (Debug)",
       "binaryDir": "${sourceDir}/build-debug",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug"
@@ -37,6 +93,22 @@
     {
       "name": "debug",
       "configurePreset": "debug"
+    },
+    {
+      "name": "linux",
+      "configurePreset": "linux"
+    },
+    {
+      "name": "linux-debug",
+      "configurePreset": "linux-debug"
+    },
+    {
+      "name": "macos",
+      "configurePreset": "macos"
+    },
+    {
+      "name": "macos-debug",
+      "configurePreset": "macos-debug"
     }
   ]
 }

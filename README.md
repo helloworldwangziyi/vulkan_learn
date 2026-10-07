@@ -6,12 +6,50 @@
 
 ## 用法
 
+Windows：
+
 ```cmd
-cd C:\Users\Administrator\Desktop\Vulkan学习
+cd C:\Users\Administrator\Desktop\VulkanLearn
 build.cmd 01_instance
 ```
 
 不带参数会列出所有课程。
+
+Linux / macOS（走 CMake，三平台同一套 CMakeLists.txt）：
+
+```bash
+cd VulkanLearn
+cmake --preset linux        # macOS 用 --preset macos；preset 按系统自动出现
+cmake --build --preset linux
+./build/01_instance
+```
+
+运行时要从项目根目录起（课程按相对路径 `shaders/xx.spv`、`textures/` 读文件）。
+
+## 在 Linux / macOS 上构建
+
+**前提：**
+
+| 平台 | 需要装 |
+|---|---|
+| Linux (Debian/Ubuntu) | `sudo apt install g++ ninja-build cmake libvulkan-dev vulkan-tools libx11-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev`（运行还需要显卡驱动自带 Vulkan ICD） |
+| Linux (Fedora) | `sudo dnf install gcc-c++ ninja-build cmake vulkan-headers vulkan-loader-devel libX11-devel libXrandr-devel libXinerama-devel libXcursor-devel libXi-devel` |
+| macOS | 装 [LunarG Vulkan SDK](https://vulkan.lunarg.com/sdk/home)（含 MoltenVK）和 `brew install ninja cmake`，然后 `export VULKAN_SDK=/路径/到/vulkansdk/macOS` |
+
+**各平台差异都在 CMakeLists.txt 里自动处理：**
+
+- Vulkan：优先 `find_package(Vulkan)`，失败退回手动探测（Windows 扫 `C:\VulkanSDK`，Linux 认系统 `/usr` 或 `find_library`，macOS 认 SDK 的 `macOS/` 子目录和 Homebrew 的 `/usr/local`、`/opt/homebrew`）
+- GLFW：Windows 用预编译的 `tools/glfw/lib/libglfw3.a`；Linux/macOS 用 `tools/glfw/src` 里的 GLFW 3.4 官方源码**现编**（X11 / Cocoa 源文件子集 + `_GLFW_X11` / `_GLFW_COCOA` 宏，清单照抄上游 `src/CMakeLists.txt`）
+- 着色器：`glslc` 在构建期自动编译 `shaders/**/*.vert|frag → .spv`，输出回源目录；找不到 glslc 自动跳过（已提交的 .spv 照样能用）
+- 课程源码：`#ifdef __APPLE__` 块处理 MoltenVK 的可移植性扩展（实例枚举标志 + `VK_KHR_portability_subset`），Windows/Linux 编译为空，零开销
+
+**macOS 特有的两个坑：**
+
+1. 运行时找不到 GPU：说明 loader 没找到 MoltenVK 的 ICD，手动指一下：
+   ```bash
+   export VK_DRIVER_FILES="$VULKAN_SDK/etc/vulkan/icd.d/MoltenVK_icd.json"
+   ```
+2. `libvulkan.1.dylib` 按 SDK 内的绝对路径链接，SDK 挪位置后需要重新 `cmake --preset macos` 再构建。
 
 ## 目录
 
@@ -142,7 +180,7 @@ cmake --build --preset debug
 ### 命令行等价操作
 
 ```powershell
-cd C:\Users\Administrator\Desktop\Vulkan学习
+cd C:\Users\Administrator\Desktop\VulkanLearn
 cmake --preset default
 cmake --build --preset default
 .\build\01_instance.exe

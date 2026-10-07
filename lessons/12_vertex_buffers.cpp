@@ -56,7 +56,10 @@ const std::vector<const char*> validationLayers = {
 };
 
 const std::vector<const char*> deviceExtensions = {
-    VK_KHR_SWAPCHAIN_EXTENSION_NAME
+    VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+#ifdef __APPLE__
+    "VK_KHR_portability_subset",   // MoltenVK 必需
+#endif
 };
 
 static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
@@ -974,8 +977,15 @@ private:
         VkInstanceCreateInfo createInfo{};
         createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
         createInfo.pApplicationInfo = &appInfo;
+#ifdef __APPLE__
+        createInfo.flags |= VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
+#endif
 
         auto extensions = getRequiredExtensions();
+#ifdef __APPLE__
+        // MoltenVK 是可移植性驱动，不显式声明不会被枚举（macOS 必需，其他平台无此扩展）
+        extensions.push_back(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
+#endif
         createInfo.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
         createInfo.ppEnabledExtensionNames = extensions.data();
 
