@@ -8,6 +8,8 @@ build-debug/
 *.exe
 *.dll
 *.a
+# textures/ 下的 .obj 是三维模型，不是编译产物
+!textures/*.obj
 
 # 着色器编译产物（根目录散落的忽略；shaders/ 里的 spv 要进仓库）
 *.spv
