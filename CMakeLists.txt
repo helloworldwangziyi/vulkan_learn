@@ -103,6 +103,7 @@ foreach(lesson_src ${LESSON_SOURCES})
     target_include_directories(${lesson_name} PRIVATE
         "${VULKAN_INCLUDE_DIR}"
         "${GLFW_INCLUDE_DIR}"
+        "${CMAKE_CURRENT_SOURCE_DIR}/tools/include"   # stb_image.h / tiny_obj_loader.h
     )
 
     # 关键：vulkan-1.lib 必须按**全路径**交给链接器。
