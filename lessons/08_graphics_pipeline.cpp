@@ -131,7 +131,7 @@ private:
 
     void initVulkan() {
         createInstance();
-        setupDebugMessenger();
+        setupDebugMessenger()e
         createSurface();
         pickPhysicalDevice();
         createLogicalDevice();
