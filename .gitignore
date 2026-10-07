@@ -11,7 +11,7 @@ build-debug/
 
 # 着色器编译产物（根目录散落的忽略；shaders/ 里的 spv 要进仓库）
 *.spv
-!shaders/*.spv
+!shaders/**/*.spv
 
 # 教程 PDF 体积大且有版权，不进仓库（本地保留）
 Vulkan_Tutorial_CN.pdf
