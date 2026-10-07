@@ -215,3 +215,4 @@ tools\glfw\rebuild.cmd
 | 12 | 顶点缓冲 —— 顶点数据经 `VkBuffer` 上显存，着色器按 `location` 接收 |
 | 13 | Staging Buffer —— 中转缓冲 + `vkCmdCopyBuffer`，顶点数据落 GPU 专用显存 |
 | 14 | 索引缓冲 —— 4 顶点 + 6 下标画矩形，`vkCmdDrawIndexed` 顶点复用 |
+| 15 | Uniform Buffer —— 描述符三件套，MVP 矩阵驱动矩形旋转 |
