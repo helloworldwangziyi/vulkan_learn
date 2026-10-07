@@ -213,3 +213,4 @@ tools\glfw\rebuild.cmd
 | 10 | 命令缓冲与录制 |
 | 11 | 渲染呈现流水线 —— `drawFrame()` 留作练习，自己画出三角形（注释里有五步提示，参考实现见提交 `b93dc16`） |
 | 12 | 顶点缓冲 —— 顶点数据经 `VkBuffer` 上显存，着色器按 `location` 接收 |
+| 13 | Staging Buffer —— 中转缓冲 + `vkCmdCopyBuffer`，顶点数据落 GPU 专用显存 |
