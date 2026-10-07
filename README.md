@@ -216,3 +216,10 @@ tools\glfw\rebuild.cmd
 | 13 | Staging Buffer —— 中转缓冲 + `vkCmdCopyBuffer`，顶点数据落 GPU 专用显存 |
 | 14 | 索引缓冲 —— 4 顶点 + 6 下标画矩形，`vkCmdDrawIndexed` 顶点复用 |
 | 15 | Uniform Buffer —— 描述符三件套，MVP 矩阵驱动矩形旋转 |
+| 16 | 纹理图像 —— stb_image 解码 + staging 上显存，布局迁移四连 |
+| 17 | 图像视图与采样器 —— 纹理的"读法"：视图定解释、采样器定取法 |
+| 18 | 组合图像采样器 —— 描述符接入纹理，矩形贴上棋盘格 |
+| 19 | 深度缓冲 —— 深度附件 + 深度测试，三维遮挡的正确性基础设施 |
+| 20 | 加载模型 —— tinyobjloader 解析 OBJ + 顶点去重，维京小屋登场 |
+| 21 | 生成 Mipmap —— `vkCmdBlitImage` 逐级减半，贴图缩小时的锯齿消失术 |
+| 22 | 多重采样 MSAA —— 多采样颜色附件 + resolve 附件，几何边缘的锯齿消失术 |
