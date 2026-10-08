@@ -16,13 +16,15 @@
   "C_Cpp.intelliSenseEngine": "disabled",
 
   // ---- CMake Tools ----
-  // macOS 用 Homebrew 的 cmake；Windows 那台机器改回
-  // "C:/Users/Administrator/Files/cmake/bin/cmake.exe"
-  "cmake.cmakePath": "/opt/homebrew/bin/cmake",
+  // cmake 不在此配置，统一从 PATH 找：Windows 用户 PATH 有 Files\cmake\bin，
+  // macOS Homebrew 的 /opt/homebrew/bin 默认就在 PATH。避免设置随仓库同步后
+  // 在另一台机器上指向不存在的路径（cmake.cmakePath 曾因此反复报错）。
   // 只用 CMakePresets.json，不弹"选择工具链"提示
   "cmake.useCMakePresets": "always",
-  "cmake.configureOnOpen": true,
-  "cmake.configureOnEdit": true,
+  // 打开/编辑文件时不自动 configure：每次 configure 都要跑一遍 cmake，
+  // 风扇吵。代价是 lessons/ 新增 .cpp 后要手动 "CMake: Configure" 一次。
+  "cmake.configureOnOpen": false,
+  "cmake.configureOnEdit": false,
   // 产物放 build/，和命令行 build.cmd 一致
   "cmake.buildDirectory": "${workspaceFolder}/build",
   // CMake Tools 状态栏"运行/调试"按钮的工作目录：课程按相对路径
