@@ -131,12 +131,12 @@ private:
         createInfo.ppEnabledExtensionNames = glfwExtensions;
 #ifdef __APPLE__
         // MoltenVK 是可移植性驱动，不显式声明不会被枚举（macOS 必需，其他平台无此扩展）
-        {
-            std::vector<const char*> extensions(glfwExtensions, glfwExtensions + glfwExtensionCount);
-            extensions.push_back(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
-            createInfo.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
-            createInfo.ppEnabledExtensionNames = extensions.data();
-        }
+        // 注意：这个 vector 必须活到 vkCreateInstance 返回（悬垂指针会段错误），
+        // 所以不能用内层花括号包起来；改名避开上面枚举本机扩展用的 extensions
+        std::vector<const char*> requiredExtensions(glfwExtensions, glfwExtensions + glfwExtensionCount);
+        requiredExtensions.push_back(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
+        createInfo.enabledExtensionCount = static_cast<uint32_t>(requiredExtensions.size());
+        createInfo.ppEnabledExtensionNames = requiredExtensions.data();
         createInfo.flags |= VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
 #endif
 
