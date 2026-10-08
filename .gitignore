@@ -17,3 +17,6 @@ build-debug/
 
 # 教程 PDF 体积大且有版权，不进仓库（本地保留）
 Vulkan_Tutorial_CN.pdf
+
+# clangd 索引缓存（语言服务器生成物）
+.cache/

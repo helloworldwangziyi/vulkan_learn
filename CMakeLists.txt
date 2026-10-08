@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(vulkan_tutorial LANGUAGES CXX)
+project(vulkan_tutorial LANGUAGES C CXX)
 
 # =============================================================================
 #  Vulkan 教程学习环境 —— CMake 构建（Windows / Linux / macOS）
@@ -194,9 +194,10 @@ else()
         null_init.c null_joystick.c null_monitor.c null_window.c)
 
     if(APPLE)
+        enable_language(OBJC)
         set(_glfw_platform
-            cocoa_init.c cocoa_joystick.c cocoa_monitor.c cocoa_time.c cocoa_window.c
-            posix_thread.c posix_time.c)
+            cocoa_init.m cocoa_joystick.m cocoa_monitor.m cocoa_time.c cocoa_window.m
+            nsgl_context.m posix_module.c posix_thread.c)
         set(_glfw_defines _GLFW_COCOA)
         set(_glfw_libs "-framework Cocoa" "-framework IOKit" "-framework CoreFoundation")
     else()

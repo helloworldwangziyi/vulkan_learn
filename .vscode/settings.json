@@ -1,22 +1,24 @@
 {
   // C/C++ 扩展的 IntelliSense 配置。
-  // 真正编译用的是 CMakePresets.json 里指定的 UCRT64 g++。
-  "C_Cpp.default.compilerPath": "C:/Users/Administrator/Files/qt/Tools/mingw1310_64/bin/g++.exe",
+  // 语言功能（补全/跳转/诊断）全部交给 clangd（读取 build*/compile_commands.json），
+  // 这里的 compilerPath/includePath 只影响 cpptools 自己的 IntelliSense（已被禁用），
+  // 以及 clangd 找不到 compile_commands.json 时的兜底。
+  // 换机器时按平台改这里。
+  "C_Cpp.default.compilerPath": "/usr/bin/clang++",
   "C_Cpp.default.cppStandard": "c++17",
-  "C_Cpp.default.intelliSenseMode": "windows-gcc-x64",
-  // 让 IntelliSense 找到 Vulkan 和 GLFW 的头文件
+  "C_Cpp.default.intelliSenseMode": "macos-clang-arm64",
+  // 让 IntelliSense 找到 Vulkan（Homebrew: vulkan-headers）和 GLFW 的头文件
   "C_Cpp.default.includePath": [
     "${workspaceFolder}/tools/glfw/include",
-    "C:/VulkanSDK/1.4.350.0/Include"
+    "/opt/homebrew/include"
   ],
-  // 语言功能（补全/跳转/诊断）全部交给 clangd，cpptools 只留作调试器
-  // （launch.json 的 cppdbg 依赖它）。cpptools 检测到 clangd 时会
-  // 弹窗问要不要关 IntelliSense，选"是"就是写的这个效果。
+  // cpptools 检测到 clangd 时会弹窗问要不要关 IntelliSense，选"是"就是写的这个效果。
   "C_Cpp.intelliSenseEngine": "disabled",
 
   // ---- CMake Tools ----
-  // cmake 不在系统 PATH 上，显式指到安装目录
-  "cmake.cmakePath": "C:/Users/Administrator/Files/cmake/bin/cmake.exe",
+  // macOS 用 Homebrew 的 cmake；Windows 那台机器改回
+  // "C:/Users/Administrator/Files/cmake/bin/cmake.exe"
+  "cmake.cmakePath": "/opt/homebrew/bin/cmake",
   // 只用 CMakePresets.json，不弹"选择工具链"提示
   "cmake.useCMakePresets": "always",
   "cmake.configureOnOpen": true,

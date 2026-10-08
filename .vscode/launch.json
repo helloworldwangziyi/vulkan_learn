@@ -2,30 +2,35 @@
   "version": "0.2.0",
   "configurations": [
     {
-      // 用 gdb 调试当前课程。前提：用 debug preset 构建过（带 -g）：
-      //   cmake --preset debug
-      //   cmake --build --preset debug
-      // 然后按 F5。
-      "name": "调试当前课程 (GDB)",
+      // 用 lldb (macOS) / gdb (Windows) 调试当前课程。前提：用 debug preset 构建过（带 -g）：
+      //   macOS:   cmake --preset macos-debug && cmake --build --preset macos-debug
+      //   Windows: cmake --preset debug       && cmake --build --preset debug
+      // 然后按 F5。下方 "windows" 块里是 Windows 专用的 gdb 配置。
+      "name": "调试当前课程",
       "type": "cppdbg",
       "request": "launch",
       // 换成你要调试的那一课（与 lessons/ 下文件名一致）
       // 注意：校验层只在 Debug 构建中启用，所以调试目标指向 build-debug/
-      "program": "${workspaceFolder}/build-debug/11_hello_triangle.exe",
+      "program": "${workspaceFolder}/build-debug/11_hello_triangle",
       "args": [],
       "stopAtEntry": false,
       "cwd": "${workspaceFolder}",
       "environment": [],
       "externalConsole": false,
-      "MIMode": "gdb",
-      "miDebuggerPath": "C:/Users/Administrator/Files/qt/Tools/mingw1310_64/bin/gdb.exe",
-      "setupCommands": [
-        {
-          "description": "为 gdb 启用整齐打印",
-          "text": "-enable-pretty-printing",
-          "ignoreFailures": true
-        }
-      ]
+      "MIMode": "lldb",
+      "windows": {
+        "name": "调试当前课程 (GDB)",
+        "program": "${workspaceFolder}/build-debug/11_hello_triangle.exe",
+        "MIMode": "gdb",
+        "miDebuggerPath": "C:/Users/Administrator/Files/qt/Tools/mingw1310_64/bin/gdb.exe",
+        "setupCommands": [
+          {
+            "description": "为 gdb 启用整齐打印",
+            "text": "-enable-pretty-printing",
+            "ignoreFailures": true
+          }
+        ]
+      }
     }
   ]
 }

@@ -59,6 +59,11 @@ GLFWbool _glfwInitVulkan(int mode)
         _glfw.vk.handle = _glfwPlatformLoadModule("vulkan-1.dll");
 #elif defined(_GLFW_COCOA)
         _glfw.vk.handle = _glfwPlatformLoadModule("libvulkan.1.dylib");
+#if defined(__aarch64__)
+        // Apple Silicon 的 Homebrew 装在 /opt/homebrew，不在 dyld 默认搜索路径里
+        if (!_glfw.vk.handle)
+            _glfw.vk.handle = _glfwPlatformLoadModule("/opt/homebrew/lib/libvulkan.1.dylib");
+#endif
         if (!_glfw.vk.handle)
             _glfw.vk.handle = _glfwLoadLocalVulkanLoaderCocoa();
 #elif defined(__OpenBSD__) || defined(__NetBSD__)
