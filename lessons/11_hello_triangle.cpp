@@ -18,6 +18,15 @@
 const uint32_t WIDTH = 800;
 const uint32_t HEIGHT = 600;
 
+struct QueueFamilyIndices {
+  std::optional<uint32_t> graphicsFamily; // 图形族
+  std::optional<uint32_t> presentFamily;  // 呈现族
+
+  bool isComplete() {
+    return graphicsFamily.has_value() && presentFamily.has_value();
+  }
+};
+
 #ifdef NOBUG
 const bool enableValidationLayers = false;
 #else
@@ -95,6 +104,11 @@ private:
   VkInstance instance; // Vulkan 实例
 
   VkDebugUtilsMessengerEXT debugMessenger; // 调试 messenger 句柄
+
+  VkSurfaceKHR surface;
+
+  // 物理设备
+  VkPhysicalDevice physicalDevice;
 
   bool initWindow() {
     glfwInit();
@@ -213,10 +227,100 @@ private:
     std::cout << "Successful create debugmessenger" << std::endl;
   }
 
-  void createSurface() {}
+  void createSurface() {
+    if (glfwCreateWindowSurface(instance, window, nullptr, &surface) !=
+        VK_SUCCESS) {
+      throw std::runtime_error("failed to create window surface");
+    }
 
-  void pickPhysicalDevice() {}
+    std::cout << "successful create window surface" << std::endl;
+  }
 
+  void pickPhysicalDevice() {
+    uint32_t deviceCount = 0;
+    vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
+
+    if (deviceCount == 0) {
+      throw std::runtime_error("failed to find GPUS with Vulkan support");
+    }
+    std::cout << "deviceCount is " << deviceCount << std::endl;
+    std::vector<VkPhysicalDevice> devices(deviceCount);
+    vkEnumeratePhysicalDevices(instance, &deviceCount, devices.data());
+
+    for (const auto &device : devices) {
+      if (isDeviceSuitable(device)) {
+        physicalDevice = device;
+
+        VkPhysicalDeviceProperties deviceProperties;
+        vkGetPhysicalDeviceProperties(device, &deviceProperties);
+        const char *typeName = "其他";
+        switch (deviceProperties.deviceType) {
+        case VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU:
+          typeName = "集成显卡";
+          break;
+        case VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU:
+          typeName = "独立显卡";
+          break;
+        case VK_PHYSICAL_DEVICE_TYPE_VIRTUAL_GPU:
+          typeName = "虚拟显卡";
+          break;
+        case VK_PHYSICAL_DEVICE_TYPE_CPU:
+          typeName = "CPU";
+          break;
+        default:
+          break;
+        }
+        std::cout << "选中的物理设备: " << deviceProperties.deviceName << "（"
+                  << typeName << "）" << std::endl;
+        break;
+      }
+    }
+    if (physicalDevice == VK_NULL_HANDLE) {
+      throw std::runtime_error("failed to find a suitable GPU");
+    }
+  }
+  bool isDeviceSuitable(VkPhysicalDevice device) {
+    QueueFamilyIndices indices = findQueueFamilies(device);
+    if (indices.isComplete()) {
+      return true;
+    }
+    return false;
+  }
+
+  QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device) {
+    QueueFamilyIndices indices;
+
+    uint32_t queueFamilyCount = 0;
+    vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount,
+                                             nullptr);
+
+    std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
+    vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount,
+                                             queueFamilies.data());
+
+    int i = 0;
+    for (const auto &queueFamily : queueFamilies) {
+      if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
+        indices.graphicsFamily = i;
+      }
+
+      VkBool32 presentSupport = false;
+      vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface, &presentSupport);
+
+      if (presentSupport) {
+        indices.presentFamily = i;
+      }
+
+      if (indices.isComplete()) {
+        std::cout << "选中队列族: graphics=" << indices.graphicsFamily.value()
+                  << ", present=" << indices.presentFamily.value() << std::endl;
+        break;
+      }
+
+      i++;
+    }
+    return indices;
+  }
   void createLogicalDevice() {}
 
   void createSwapChain() {}
