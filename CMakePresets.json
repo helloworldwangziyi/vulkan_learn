@@ -19,6 +19,7 @@
       "binaryDir": "${sourceDir}/build",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_C_COMPILER": "C:/Users/Administrator/Files/qt/Tools/mingw1310_64/bin/gcc.exe",
         "CMAKE_CXX_COMPILER": "C:/Users/Administrator/Files/qt/Tools/mingw1310_64/bin/g++.exe",
         "CMAKE_MAKE_PROGRAM": "C:/Users/Administrator/Files/msys/ucrt64/bin/ninja.exe",
         "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
