@@ -4,8 +4,8 @@ project(vulkan_tutorial LANGUAGES C CXX)
 # =============================================================================
 #  Vulkan 教程学习环境 —— CMake 构建（Windows / Linux / macOS）
 #
-#  只做三件事：找到 GLFW 和 Vulkan、给 lessons/ 下每课建一个可执行文件、
-#  把各平台的坑绕过去。没有任何封装代码。
+#  只做三件事：找到 GLFW 和 Vulkan、给 lessons/（入门）和 advanced/
+#  （中高级）下每个 .cpp 建一个可执行文件、把各平台的坑绕过去。没有任何封装代码。
 #
 #  VS Code：装 CMake Tools 扩展后打开本目录，它会读 CMakePresets.json
 #  自动配好编译器和生成器，底部状态栏直接选 target 就能编译/调试。
@@ -282,16 +282,17 @@ foreach(_asset_dir shaders textures)
 endforeach()
 
 # -----------------------------------------------------------------------------
-# 每课一个可执行文件
+# 每课一个可执行文件（lessons/ 入门 + advanced/ 中高级）
 #
-# 新增一课：把 .cpp 放进 lessons/ 再重新 configure（GLOB 的代价）。
+# 新增一课：把 .cpp 放进 lessons/ 或 advanced/ 再重新 configure（GLOB 的代价）。
 # VS Code 里会自动重配；命令行下再跑一次 cmake 即可。
 # -----------------------------------------------------------------------------
-file(GLOB LESSON_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/lessons/*.cpp")
+file(GLOB LESSON_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/lessons/*.cpp"
+                         "${CMAKE_CURRENT_SOURCE_DIR}/advanced/*.cpp")
 list(SORT LESSON_SOURCES)
 
 if(NOT LESSON_SOURCES)
-    message(FATAL_ERROR "lessons/ 下没有 .cpp 文件")
+    message(FATAL_ERROR "lessons/ 和 advanced/ 下都没有 .cpp 文件")
 endif()
 
 if(WIN32)
