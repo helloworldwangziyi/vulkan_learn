@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VulkanLearn —— 从零手写 Vulkan 渲染器</title>
+  <meta name="description" content="一份从零开始、逐课提交的 Vulkan 学习教程：22 课、每课一个可执行文件、全中文讲解与踩坑记录。">
+  <link rel="stylesheet" href="vendor/vue.css">
+  <style>
+    /* 自定义：代码块可读性 + 目录高亮 */
+    .markdown-section code { font-family: Consolas, "JetBrains Mono", monospace; }
+    .markdown-section pre { border-radius: 6px; }
+    .app-name { font-weight: 700; }
+    blockquote { border-left: 4px solid #42b983; }
+  </style>
+</head>
+<body>
+  <div id="app">加载中……（若长时间无响应，请检查是否通过 HTTP 服务访问，而非 file://）</div>
+  <script>
+    window.$docsify = {
+      name: 'VulkanLearn',
+      loadSidebar: true,
+      subMaxLevel: 2,
+      auto2top: true,
+      maxLevel: 4,
+      search: {
+        placeholder: '搜索教程内容…',
+        noData: '没有找到相关内容',
+        depth: 6
+      },
+      pagination: { previousText: '上一章', nextText: '下一章' }
+    }
+  </script>
+  <script src="vendor/docsify.min.js"></script>
+  <script src="vendor/search.min.js"></script>
+  <script src="vendor/prism-cpp.min.js"></script>
+  <script src="vendor/prism-glsl.min.js"></script>
+</body>
+</html>
