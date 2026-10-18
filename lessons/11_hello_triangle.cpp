@@ -716,11 +716,54 @@ private:
     return shaderModule;
   }
 
-  void createFrameBuffers() {}
+  void createFrameBuffers() {
+    swapChainFramebuffers.resize(swapChainImageViews.size());
 
-  void createCommandPool() {}
+    for (size_t i = 0; i < swapChainImageViews.size(); i++) {
+      VkImageView attachments[] = {swapChainImageViews[i]};
 
-  void createCommandBuffers() {}
+      VkFramebufferCreateInfo framebufferInfo{};
+      framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+      framebufferInfo.renderPass = renderPass;
+      framebufferInfo.attachmentCount = 1;
+      framebufferInfo.pAttachments = attachments;
+      framebufferInfo.width = swapChainExtent.width;
+      framebufferInfo.height = swapChainExtent.height;
+      framebufferInfo.layers = 1;
+
+      if (vkCreateFramebuffer(device, &framebufferInfo, nullptr,
+                              &swapChainFramebuffers[i]) != VK_SUCCESS) {
+        throw std::runtime_error("failed to create framebuffer!");
+      }
+    }
+  }
+
+  void createCommandPool() {
+    QueueFamilyIndices queueFamilyindices = findQueueFamilies(physicalDevice);
+
+    VkCommandPoolCreateInfo poolInfo{};
+    poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+    poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+    poolInfo.queueFamilyIndex = queueFamilyindices.graphicsFamily.value();
+
+    if (vkCreateCommandPool(device, &poolInfo, nullptr, &commandPool) !=
+        VK_SUCCESS) {
+      throw std::runtime_error("failed to create command pool");
+    }
+  }
+
+  void createCommandBuffers() {
+    VkCommandBufferAllocateInfo allocInfo{};
+    allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+    allocInfo.commandPool = commandPool;
+    allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+    allocInfo.commandBufferCount = 1;
+
+    if (vkAllocateCommandBuffers(device, &allocInfo, &commandBuffer) !=
+        VK_SUCCESS) {
+      throw std::runtime_error("failed to allocate command buffers");
+    }
+  }
 
   bool checkValidationLayerSupport() {
     uint32_t LayerCount;
