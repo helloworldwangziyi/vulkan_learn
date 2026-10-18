@@ -21,6 +21,7 @@
 
 - **附录**
   - [踩坑记录总表](pitfalls.md)
+  - [Vulkan API 全解（第 1-11 课）](api-walkthrough.md)
   - [资源与延伸阅读](resources.md)
   - [Vulkan 中高级学习路线（20 章）](Vulkan中高级学习路线.md)
   - [跨平台 CMakeLists 编写指南](跨平台CMakeLists编写指南.md)
